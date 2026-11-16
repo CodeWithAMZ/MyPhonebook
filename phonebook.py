@@ -18,7 +18,7 @@ conn.commit()
 c=0
 while c != 6:
     input('Press Enter to continue...')
-    os.system('cls')
+    os.system('cls' if os.name == 'nt' else 'clear')
     print('\n----- My PhoneBook v2.0 -----')
     print('1. Add Contact')
     print('2. List Contact')
@@ -41,13 +41,17 @@ while c != 6:
     #-----List Contact-----
     elif choose == '2':
         cur.execute('SELECT name , number FROM contacts')
-        for contact in cur.fetchall():
-            print(f'Name: {contact[0]} | Number: {contact[1]}')
+        contacts = cur.fetchall()
+        if contacts:
+            for contact in contacts:
+                print(f'Name: {contact[0]} | Number: {contact[1]}')
+        else:
+            print('No contacts found!')
 
     #-----Search Contact-----
     elif choose == '3':
-        choice = input('Search by Name or Number? (name/number): ')
-        if choice.lower() == 'name':
+        choice = input('Search by Name or Number? (name/number): ').lower().strip()
+        if choice == 'name':
             name1 = input('Enter Contact Name: ')
             cur.execute('''
                 select name, number from contacts where name = ?
@@ -57,14 +61,21 @@ while c != 6:
             cur.execute('''
                 select name, number from contacts where number = ?
             ''', (number1,))
+        else:
+            print('Invalid Search Option!')
+            continue
+
         contacts = cur.fetchall()
-        for c in contacts:
-            print(f'Name: {c[0]} | Number: {c[1]}')
+        if contacts:
+            for c in contacts:
+                print(f'Name: {c[0]} | Number: {c[1]}')
+        else:
+            print('Contact Not Found!')
 
     #-----Delete Contact-----
     elif choose == '4':
-        choice = input('Search by Name or Number? (name/number): ')
-        if choice.lower() == 'name':
+        choice = input('Search by Name or Number? (name/number): ').lower().strip()
+        if choice == 'name':
             name1 = input('Enter Contact Name: ')
             cur.execute('''
                 delete from contacts where name = ?
@@ -74,8 +85,15 @@ while c != 6:
             cur.execute('''
                 delete from contacts where number = ?
             ''', (number1,))
+        else:
+            print('Invalid Search Option!')
+            continue
+
         conn.commit()
-        print('Contact Deleted!')
+        if cur.rowcount > 0:
+            print('Contact Deleted!')
+        else:
+            print('Contact Not Found!')
 
     #-----Edit Contact-----
     elif choose == '5':
@@ -85,7 +103,10 @@ while c != 6:
             update contacts set number = ? where name = ?
         ''', (number1, name1))
         conn.commit()
-        print('Contact Updated!')
+        if cur.rowcount > 0:
+            print('Contact Updated!')
+        else:
+            print('Contact Not Found!')
 
     #-----Exit-----
     elif choose == '6':
